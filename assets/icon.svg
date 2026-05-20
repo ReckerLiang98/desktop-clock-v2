@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <radialGradient id="faceGrad" cx="0.4" cy="0.35">
+      <stop offset="0%" stop-color="#FFFDF7"/>
+      <stop offset="100%" stop-color="#F5EDE0"/>
+    </radialGradient>
+    <radialGradient id="earGradL" cx="0.3" cy="0.7">
+      <stop offset="0%" stop-color="#FAB566"/>
+      <stop offset="100%" stop-color="#E8893A"/>
+    </radialGradient>
+    <radialGradient id="earGradR" cx="0.7" cy="0.7">
+      <stop offset="0%" stop-color="#FAB566"/>
+      <stop offset="100%" stop-color="#E8893A"/>
+    </radialGradient>
+    <radialGradient id="bezelGrad" cx="0.35" cy="0.3">
+      <stop offset="0%" stop-color="#FCC97B"/>
+      <stop offset="60%" stop-color="#F0A040"/>
+      <stop offset="100%" stop-color="#C87028"/>
+    </radialGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#00000033"/>
+    </filter>
+  </defs>
+
+  <!-- Left ear (behind clock) -->
+  <polygon points="80,58 56,6 118,52" fill="url(#earGradL)" stroke="#D87820" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- Left ear inner -->
+  <polygon points="82,60 62,22 108,54" fill="#FDD9B0" opacity="0.6"/>
+
+  <!-- Right ear (behind clock) -->
+  <polygon points="176,58 200,6 138,52" fill="url(#earGradR)" stroke="#D87820" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- Right ear inner -->
+  <polygon points="174,60 194,22 148,54" fill="#FDD9B0" opacity="0.6"/>
+
+  <!-- Clock bezel (outer ring) -->
+  <circle cx="128" cy="136" r="96" fill="url(#bezelGrad)" filter="url(#shadow)" stroke="#C87028" stroke-width="1"/>
+
+  <!-- Clock face -->
+  <circle cx="128" cy="136" r="80" fill="url(#faceGrad)" stroke="#E0D0B8" stroke-width="1"/>
+
+  <!-- Tick marks (every 30°) -->
+  <g stroke="#999" stroke-width="2" stroke-linecap="round">
+    <line x1="128" y1="60" x2="128" y2="70"/>     <!-- 12 -->
+    <line x1="128" y1="202" x2="128" y2="212"/>    <!-- 6 -->
+    <line x1="52" y1="136" x2="62" y2="136"/>      <!-- 9 -->
+    <line x1="194" y1="136" x2="204" y2="136"/>    <!-- 3 -->
+  </g>
+  <g stroke="#CCC" stroke-width="1.2" stroke-linecap="round">
+    <line x1="166" y1="60" x2="172" y2="70"/>      <!-- 1 -->
+    <line x1="194" y1="98" x2="200" y2="104"/>     <!-- 2 -->
+    <line x1="166" y1="212" x2="172" y2="202"/>    <!-- 7 -->
+    <line x1="194" y1="174" x2="200" y2="168"/>    <!-- 8 -->
+    <line x1="90" y1="60" x2="84" y2="70"/>        <!-- 11 -->
+    <line x1="62" y1="98" x2="56" y2="104"/>       <!-- 10 -->
+    <line x1="90" y1="212" x2="84" y2="202"/>      <!-- 5 -->
+    <line x1="62" y1="174" x2="56" y2="168"/>      <!-- 4 -->
+  </g>
+
+  <!-- Cat eyes -->
+  <ellipse cx="106" cy="122" rx="10" ry="11" fill="#333"/>
+  <ellipse cx="150" cy="122" rx="10" ry="11" fill="#333"/>
+  <!-- Eye shine -->
+  <ellipse cx="109" cy="118" rx="3.5" ry="4" fill="#FFF"/>
+  <ellipse cx="153" cy="118" rx="3.5" ry="4" fill="#FFF"/>
+
+  <!-- Cat nose -->
+  <polygon points="128,140 122,147 134,147" fill="#F8A0A0"/>
+
+  <!-- Mouth lines -->
+  <path d="M122 147 Q118 155 110 154" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M134 147 Q138 155 146 154" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Whiskers -->
+  <g stroke="#C0B8A8" stroke-width="1.2" stroke-linecap="round" opacity="0.7">
+    <line x1="68" y1="130" x2="100" y2="136"/>
+    <line x1="66" y1="140" x2="100" y2="140"/>
+    <line x1="68" y1="150" x2="100" y2="144"/>
+    <line x1="188" y1="130" x2="156" y2="136"/>
+    <line x1="190" y1="140" x2="156" y2="140"/>
+    <line x1="188" y1="150" x2="156" y2="144"/>
+  </g>
+
+  <!-- Hour hand (pointing roughly at 10) -->
+  <g transform="rotate(-60, 128, 136)">
+    <rect x="124" y="94" width="8" height="48" rx="4" fill="#444"/>
+    <polygon points="124,94 128,84 132,94" fill="#444"/>
+  </g>
+
+  <!-- Minute hand (pointing roughly at 2) -->
+  <g transform="rotate(60, 128, 136)">
+    <rect x="125.5" y="80" width="5" height="60" rx="2.5" fill="#555"/>
+    <polygon points="125.5,80 128,70 130.5,80" fill="#555"/>
+  </g>
+
+  <!-- Center dot -->
+  <circle cx="128" cy="136" r="6" fill="#F0A040" stroke="#C87028" stroke-width="1"/>
+  <circle cx="128" cy="136" r="2.5" fill="#FFF" opacity="0.6"/>
+</svg>
