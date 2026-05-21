@@ -16,7 +16,7 @@ import { useClock } from './hooks/useClock';
 import { useTimeSync } from './hooks/useTimeSync';
 import { useSystemTheme } from './hooks/useSystemTheme';
 import { TZ_LIST } from './utils/constants';
-import { fetchWeatherByIP } from './services/api';
+import { fetchWeather } from './services/api';
 import { getSystemTZ } from './utils/constants';
 import TitleBar from './components/TitleBar';
 import SyncStatus from './components/SyncStatus';
@@ -65,7 +65,7 @@ export default function App() {
   const loadWeather = useCallback(async () => {
     setWeatherLoading(true);
     try {
-      const data = await fetchWeatherByIP();
+      const data = await fetchWeather();
       if (data) {
         setWeather(data);
         window.electronAPI?.updateWeather(data);

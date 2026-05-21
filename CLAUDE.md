@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**语言偏好：请永远使用中文和我对话。**
+
 ## Project Overview
 
 桌面时钟 (Desktop Clock v2) — Electron + React + Vite. Frameless transparent window with millisecond-precision time display, network time sync (RTT-compensated), IP-based timezone & weather, 24 solar terms (二十四节气), Chinese holidays (节假日), Chinese lunar calendar (1900–2100), Fluent Design dark/light themes (auto-follow system or manual), system tray, and hourly chime notifications.

@@ -111,15 +111,15 @@ const WMO_INFO = {
 };
 
 /**
- * 获取天气数据（优先 wttr.in 单请求快速响应，Open-Meteo 作为备用）
+ * 获取天气数据（基于设备 IP 地址定位，优先 wttr.in 单请求快速响应，Open-Meteo 作为备用）
  *
  * 数据源：
- *   1. wttr.in   — 单次请求，IP 定位 + 天气一并返回（最快）
+ *   1. wttr.in      — 单次请求，IP 定位 + 天气一并返回（最快）
  *   2. Open-Meteo + ipapi.co — 两次请求，无 rate-limit，作为可靠备用
  *
  * @returns {{ location, country, temp, weather, humidity, icon, iconEmoji } | null}
  */
-export async function fetchWeatherByIP() {
+export async function fetchWeather() {
   // ── 方案一：wttr.in（单请求，速度最快）──
   try {
     const res = await fetch('https://wttr.in/?format=j1&lang=zh-cn', {
