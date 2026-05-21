@@ -40,7 +40,7 @@ function createWindow() {
     win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
   }
 
-  win.setAlwaysOnTop(false, 'screen-saver');
+  win.setAlwaysOnTop(false, 'floating');
   win.center();
 
   // 页面加载完成后，向渲染进程发送当前系统主题
@@ -109,7 +109,7 @@ function updateTrayMenu() {
     { label: '隐藏窗口', click: () => { if (win) win.hide(); } },
     { label: '窗口置顶', type: 'checkbox', checked: alwaysOnTop, click: (mi) => {
       alwaysOnTop = mi.checked;
-      if (win) win.setAlwaysOnTop(alwaysOnTop, 'screen-saver');
+      if (win) win.setAlwaysOnTop(alwaysOnTop, 'floating');
     }},
     { type: 'separator' },
     { label: '退出', click: () => { app.quit(); } },
@@ -127,7 +127,7 @@ ipcMain.on('resize-window', (_e, w, h) => {
 
 ipcMain.on('toggle-always-on-top', () => {
   alwaysOnTop = !alwaysOnTop;
-  if (win) win.setAlwaysOnTop(alwaysOnTop, 'screen-saver');
+  if (win) win.setAlwaysOnTop(alwaysOnTop, 'floating');
   updateTrayMenu();  // 同步托盘菜单中的置顶勾选状态
 });
 
