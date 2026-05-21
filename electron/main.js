@@ -147,6 +147,11 @@ ipcMain.on('close-window', () => { app.quit(); });
 
 	// 接收渲染进程发送的最新天气数据，用于整点报时附送天气信息
 	ipcMain.on('update-weather', (_e, data) => { latestWeather = data; });
+
+	// 渲染进程推送托盘提示文本（时间 + 天气）
+	ipcMain.on('update-tray-tooltip', (_e, text) => {
+		if (tray) tray.setToolTip(text);
+	});
 // ── 系统主题变化监听 ──────────────────────────────────────
 // Windows 切换深色/浅色模式时，通知渲染进程更新 UI 主题
 nativeTheme.on('updated', () => {

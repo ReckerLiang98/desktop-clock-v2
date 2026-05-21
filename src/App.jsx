@@ -86,6 +86,26 @@ export default function App() {
     return () => clearInterval(id);
   }, [loadWeather]);
 
+  // ── 托盘提示：每 30 秒推送时间 + 天气到主进程 ──────────
+  const weather4TrayRef = useRef(null);
+  weather4TrayRef.current = weather;
+  const time4TrayRef = useRef(null);
+  time4TrayRef.current = time;
+
+  useEffect(() => {
+    const updateTray = () => {
+      const t = time4TrayRef.current;
+      const w = weather4TrayRef.current;
+      let text = t ? t.h + ':' + t.m : '';
+      if (t && !is24) text = t.ampm + ' ' + text;
+      if (w) text += ' · ' + w.iconEmoji + ' ' + w.weather + ' ' + w.temp;
+      if (text) window.electronAPI?.updateTrayTooltip(text);
+    };
+    updateTray();
+    const id = setInterval(updateTray, 30000);
+    return () => clearInterval(id);
+  }, [is24]);
+
   // ── 关闭对话框 ────────────────────────────────────────
   const [showClose, setShowClose] = useState(false);
 

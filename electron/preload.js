@@ -27,6 +27,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   /** 向主进程发送最新天气数据（用于整点报时附送天气） */
   updateWeather: (data) => ipcRenderer.send('update-weather', data),
 
+		/** 推送托盘提示文本（时间 + 天气） */
+		updateTrayTooltip: (text) => ipcRenderer.send('update-tray-tooltip', text),
+
   /** 监听系统主题变化（深色/浅色模式切换） */
   onNativeThemeChanged: (cb) => {
     ipcRenderer.on('native-theme-changed', (_e, theme) => cb(theme));
