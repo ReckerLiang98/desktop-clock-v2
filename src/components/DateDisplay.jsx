@@ -22,9 +22,9 @@ export default function DateDisplay({ date, tz, tzManual, onTZClick, children })
       <div className="lunar">{date.lunar}</div>
       {date.holiday ? (
         <div className="holiday">🎉 {date.holiday}</div>
-      ) : (
+      ) : date.solarTerm ? (
         <div className="solar-term">{date.solarTerm}</div>
-      )}
+      ) : null}
       <div className="tz" onClick={onTZClick} title="点击切换时区">
         时区: {tz.name} ({formatOffset(tz.offset)}){tzManual ? ' [手动]' : ' [IP]'}
       </div>

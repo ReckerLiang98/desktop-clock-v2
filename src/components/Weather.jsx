@@ -18,7 +18,7 @@ export default function Weather({ data, loading, onRefresh }) {
       <span>{data.location || data.country}</span>
       <span>{data.temp}</span>
       <span>{data.weather}</span>
-      <span>💧{data.humidity}</span>
+      {data.humidity && <span>💧{data.humidity}</span>}
       {/* 手动刷新按钮 */}
       <button
         className="weather-refresh-btn"

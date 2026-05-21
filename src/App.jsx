@@ -227,7 +227,7 @@ export default function App() {
           {tzMenuOpen && (
             <TimezoneMenu
               tzList={TZ_LIST}
-              currentOffset={resolvedTz.offset}
+              currentTz={resolvedTz.tz}
               autoTz={syncTz}
               isAuto={!tzManual}
               onSelect={setTZManualFn}

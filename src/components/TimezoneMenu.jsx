@@ -11,7 +11,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { formatOffset } from '../utils/constants';
 
-export default function TimezoneMenu({ tzList, currentOffset, autoTz, isAuto, onSelect, onAuto, onClose }) {
+export default function TimezoneMenu({ tzList, currentTz, autoTz, isAuto, onSelect, onAuto, onClose }) {
   const ref = useRef(null);
 
   // 动态调整 max-height，确保菜单不超出视口边界
@@ -40,7 +40,7 @@ export default function TimezoneMenu({ tzList, currentOffset, autoTz, isAuto, on
       {tzList.map(t => (
         <div
           key={t.tz}
-          className={'tz-opt' + (!isAuto && t.offset === currentOffset ? ' active' : '')}
+          className={'tz-opt' + (!isAuto && t.tz === currentTz ? ' active' : '')}
           onClick={() => onSelect({ name: t.name, offset: t.offset, tz: t.tz })}
         >
           {t.name} · {formatOffset(t.offset)}
