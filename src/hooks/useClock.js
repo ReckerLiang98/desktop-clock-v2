@@ -9,7 +9,7 @@
 //   - is24 通过 ref 读取，切换制式时无需重启定时器，无延迟
 
 import { useState, useEffect, useRef } from 'react';
-import { solarToLunar, SHENGXIAO_EMOJI, getCurrentSolarTerm, isSolarTermDay, getHoliday } from '../utils/lunar';
+import { solarToLunar, SHENGXIAO_EMOJI, isSolarTermDay, getHoliday } from '../utils/lunar';
 import { WEEKDAY_NAMES } from '../utils/constants';
 
 /** 将小时数映射到中文时段：凌晨/早上/上午/中午/下午/傍晚/晚上 */
@@ -84,7 +84,7 @@ export function useClock({ offset, tzOffset, is24 }) {
         const weekday = WEEKDAY_NAMES[d.getUTCDay()];
         const lu = solarToLunar(y, mo, day);
         const lunar = lu ? `农历 ${lu.yearName}年(${lu.shengxiao}${SHENGXIAO_EMOJI[lu.shengxiao] || ''}) ${lu.monthName}${lu.dayName}` : '';
-        const solarTerm = getCurrentSolarTerm(y, mo, day);
+        const solarTerm = isSolarTermDay(y, mo, day) || '';
         const holiday = getHoliday(y, mo, day, lu);
 
         setDate({ dateStr, weekday, lunar, solarTerm, holiday });
