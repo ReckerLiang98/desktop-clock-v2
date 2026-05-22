@@ -30,6 +30,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
 		/** 推送托盘提示文本（时间 + 天气） */
 		updateTrayTooltip: (text) => ipcRenderer.send('update-tray-tooltip', text),
 
+  /** 窗口从任务栏恢复时触发 */
+  onWindowRestored: (cb) => {
+    ipcRenderer.on('window-restored', () => cb());
+  },
+
+  /** 监听窗口置顶状态变化 */
+  onAlwaysOnTopChanged: (cb) => {
+    ipcRenderer.on('always-on-top-changed', (_e, state) => cb(state));
+  },
+
   /** 监听系统主题变化（深色/浅色模式切换） */
   onNativeThemeChanged: (cb) => {
     ipcRenderer.on('native-theme-changed', (_e, theme) => cb(theme));

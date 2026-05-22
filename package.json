@@ -1,6 +1,6 @@
 {
   "name": "desktop-clock-v2",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "桌面时钟 - 毫秒精度 · 网络同步 · 农历 · 天气 · 系统主题",
   "main": "electron/main.js",
   "author": "",

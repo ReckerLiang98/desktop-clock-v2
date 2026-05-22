@@ -32,6 +32,7 @@ export default function App() {
   const [is24, setIs24] = useState(true);        // 24 小时制开关
   const [showMs, setShowMs] = useState(false);   // 毫秒显示开关（默认关闭）
   const [topEnabled, setTopEnabled] = useState(false);  // 窗口置顶状态
+  const [windowAnim, setWindowAnim] = useState(null);  // null | 'minimizing' | 'restoring'
 
   // ── 网络时间同步 ──────────────────────────────────────
   const { offset, rtt, clientIp, synced, syncFailures, syncing, syncTz, syncTime } = useTimeSync();
@@ -101,10 +102,11 @@ export default function App() {
       if (w) text += ' · ' + w.iconEmoji + ' ' + w.weather + ' ' + w.temp;
       if (text) window.electronAPI?.updateTrayTooltip(text);
     };
-    updateTray();
+    // 延迟 50ms 执行首次更新，确保 useClock 的 tick() 已用新时区偏移量更新了时间
+    const initTimer = setTimeout(updateTray, 50);
     const id = setInterval(updateTray, 30000);
-    return () => clearInterval(id);
-  }, [is24]);
+    return () => { clearTimeout(initTimer); clearInterval(id); };
+  }, [is24, resolvedTz.tz]);
 
   // ── 关闭对话框 ────────────────────────────────────────
   const [showClose, setShowClose] = useState(false);
@@ -154,7 +156,6 @@ export default function App() {
 
   const toggleTop = useCallback(() => {
     window.electronAPI?.toggleAlwaysOnTop();
-    setTopEnabled(prev => !prev);
   }, []);
 
   /** 隐藏到系统托盘 */
@@ -199,12 +200,33 @@ export default function App() {
     return () => document.removeEventListener('keydown', handler);
   }, [toggle24, toggleMs, cycleTheme, syncTime, loadWeather]);
 
+  // ── 监听主进程置顶状态变化（托盘菜单切换时同步） ────
+  useEffect(() => {
+    window.electronAPI?.onAlwaysOnTopChanged(setTopEnabled);
+  }, []);
+
+  // 窗口从任务栏恢复时播放展开动画
+  useEffect(() => {
+    window.electronAPI?.onWindowRestored(() => {
+      setWindowAnim('restoring');
+      setTimeout(() => setWindowAnim(null), 250);
+    });
+  }, []);
+
+  // 最小化：播放缩小动画 → 系统最小化
+  const handleMinimize = useCallback(() => {
+    setWindowAnim('minimizing');
+    setTimeout(() => {
+      window.electronAPI?.minimizeWindow();
+    }, 250);
+  }, []);
+
   // ── 渲染 ───────────────────────────────────────────────
   return (
-    <div className={`app-root ${theme}`}>
+    <div className={`app-root ${theme}${windowAnim ? ' ' + windowAnim : ''}`}>
       <TitleBar
         topEnabled={topEnabled}
-        onMinimize={() => window.electronAPI?.minimizeWindow()}
+        onMinimize={handleMinimize}
         onToggleTop={toggleTop}
         onClose={handleClose}
       />

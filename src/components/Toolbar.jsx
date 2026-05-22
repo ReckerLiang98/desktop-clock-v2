@@ -30,7 +30,7 @@ export default function Toolbar({ is24, showMs, themeMode, onToggle24, onToggleM
       </button>
 
       {/* 主题循环切换 */}
-      <button className="btn" onClick={onCycleTheme} title={`当前: ${themeLabel} (T)`}>
+      <button className="btn theme-btn" onClick={onCycleTheme} title={`当前: ${themeLabel} (T)`}>
         {themeIcon}
       </button>
 

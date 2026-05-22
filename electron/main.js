@@ -50,6 +50,11 @@ function createWindow() {
 
   win.on('closed', () => { win = null; });
 
+  // 窗口从任务栏恢复时通知渲染进程（用于清除最小化动画状态）
+  win.on('restore', () => {
+    win.webContents.send('window-restored');
+  });
+
 }
 
 // ── 创建系统托盘 ────────────────────────────────────────────
@@ -109,7 +114,10 @@ function updateTrayMenu() {
     { label: '隐藏窗口', click: () => { if (win) win.hide(); } },
     { label: '窗口置顶', type: 'checkbox', checked: alwaysOnTop, click: (mi) => {
       alwaysOnTop = mi.checked;
-      if (win) win.setAlwaysOnTop(alwaysOnTop, 'floating');
+      if (win) {
+        win.setAlwaysOnTop(alwaysOnTop, 'floating');
+        win.webContents.send('always-on-top-changed', alwaysOnTop);
+      }
     }},
     { type: 'separator' },
     { label: '退出', click: () => { app.quit(); } },
@@ -127,8 +135,11 @@ ipcMain.on('resize-window', (_e, w, h) => {
 
 ipcMain.on('toggle-always-on-top', () => {
   alwaysOnTop = !alwaysOnTop;
-  if (win) win.setAlwaysOnTop(alwaysOnTop, 'floating');
-  updateTrayMenu();  // 同步托盘菜单中的置顶勾选状态
+  if (win) {
+    win.setAlwaysOnTop(alwaysOnTop, 'floating');
+    win.webContents.send('always-on-top-changed', alwaysOnTop);
+  }
+  updateTrayMenu();
 });
 
 // 隐藏到托盘时，首次显示一条提示通知

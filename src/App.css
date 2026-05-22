@@ -354,6 +354,13 @@ body {
   color: var(--accent);                /* 激活状态用强调色 */
 }
 
+/* 主题按钮固定宽度，避免不同 emoji 导致按钮大小变化 */
+.toolbar .btn.theme-btn {
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
+}
+
 /* ── 提示文字 ──────────────────────────────────── */
 .hint {
   margin-top: 12px;
@@ -508,6 +515,27 @@ body {
   cursor: pointer;
 }
 .dialog-check input { accent-color: var(--accent); }
+
+/* ── 窗口动画（模拟 Windows 原生最小化/恢复效果） ── */
+.app-root.minimizing {
+  animation: win-minimize 250ms cubic-bezier(0.42, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+
+.app-root.restoring {
+  animation: win-restore 250ms cubic-bezier(0, 0, 0.58, 1) forwards;
+}
+
+@keyframes win-minimize {
+  0%   { transform: scale(1);   opacity: 1; }
+  /* 最终 opacity 保持 1，确保 Windows DWM 能捕获可见画面生成任务栏缩略图 */
+  100% { transform: scale(0.75) translateY(24px); opacity: 1; }
+}
+
+@keyframes win-restore {
+  0%   { transform: scale(0.85) translateY(12px); opacity: 0.3; }
+  100% { transform: scale(1)   translateY(0);  opacity: 1; }
+}
 
 /* ── 滚动条样式 ────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
