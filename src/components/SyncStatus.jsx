@@ -7,7 +7,9 @@
 //   - 🟡 同步中：黄色圆点 + 呼吸动画
 //   - 🔴 同步失败：橙色圆点 + 重试次数
 
-export default function SyncStatus({ synced, syncing, syncFailures, offset, rtt, clientIp }) {
+import { memo } from 'react';
+
+function SyncStatus({ synced, syncing, syncFailures, offset, rtt, clientIp }) {
   let status, label;
   if (syncing) {
     status = 'syncing';
@@ -32,3 +34,5 @@ export default function SyncStatus({ synced, syncing, syncFailures, offset, rtt,
     </div>
   );
 }
+
+export default memo(SyncStatus);

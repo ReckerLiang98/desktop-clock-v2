@@ -8,7 +8,9 @@
 // 天气数据来自 wttr.in 免费 API（无需 API Key），
 // 点击刷新按钮或按 W 键可手动刷新
 
-export default function Weather({ data, loading, onRefresh }) {
+import { memo } from 'react';
+
+function Weather({ data, loading, onRefresh }) {
   if (!data) return null;
 
   return (
@@ -31,3 +33,5 @@ export default function Weather({ data, loading, onRefresh }) {
     </div>
   );
 }
+
+export default memo(Weather);

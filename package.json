@@ -7,9 +7,11 @@
   "scripts": {
     "dev": "concurrently -k \"vite\" \"wait-on http://localhost:5173 && cross-env DEV=true electron .\"",
     "build": "vite build && electron-builder --win --x64",
-    "pack": "vite build && electron-packager . 桌面时钟 --platform=win32 --arch=x64 --out=release --overwrite --icon assets/icon-256.ico",
+    "pack": "vite build && electron-packager . 桌面时钟 --platform=win32 --arch=x64 --out=release --overwrite --icon assets/icon-256.ico --ignore src --ignore scripts --ignore CLAUDE\\.md --ignore vite\\.config\\.js --ignore \\.gitignore --ignore icon\\.svg --ignore icon-32-base64\\.txt",
     "dist": "electron-builder --win --x64 --prepackaged \"release/桌面时钟-win32-x64\"",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "build": {
     "appId": "com.desktopclock.v2",
@@ -50,14 +52,18 @@
   },
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "^4.3.0",
     "concurrently": "^9.1.0",
     "cross-env": "^7.0.3",
     "electron": "^33.4.11",
     "electron-builder": "^25.1.8",
     "electron-packager": "^17.1.2",
+    "jsdom": "^29.1.1",
     "sharp": "^0.34.5",
     "vite": "^5.4.0",
+    "vitest": "^4.1.7",
     "wait-on": "^8.0.0"
   }
 }

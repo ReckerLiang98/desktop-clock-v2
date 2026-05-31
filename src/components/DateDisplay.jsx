@@ -12,9 +12,10 @@
 //
 // 通过 children 插槽接收 TimezoneMenu，使其相对于 date-block 定位
 
+import { memo } from 'react';
 import { formatOffset } from '../utils/constants';
 
-export default function DateDisplay({ date, tz, tzManual, onTZClick, children }) {
+function DateDisplay({ date, tz, tzManual, onTZClick, children }) {
   return (
     <div className="date-block" style={{ position: 'relative' }}>
       <div className="date-text">{date.dateStr}</div>
@@ -33,3 +34,5 @@ export default function DateDisplay({ date, tz, tzManual, onTZClick, children })
     </div>
   );
 }
+
+export default memo(DateDisplay);

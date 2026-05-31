@@ -8,7 +8,9 @@
 //   - 主题切换（深色/浅色/跟随系统，用图标表示当前状态）
 //   - 手动同步网络时间
 
-export default function Toolbar({ is24, showMs, themeMode, onToggle24, onToggleMs, onCycleTheme, onSync }) {
+import { memo } from 'react';
+
+function Toolbar({ is24, showMs, themeMode, onToggle24, onToggleMs, onCycleTheme, onSync }) {
   const themeIcon = themeMode === 'dark'
     ? '🌙' : themeMode === 'light'
     ? '☀️' : '🔄';
@@ -46,3 +48,5 @@ export default function Toolbar({ is24, showMs, themeMode, onToggle24, onToggleM
     </div>
   );
 }
+
+export default memo(Toolbar);

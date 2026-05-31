@@ -170,10 +170,8 @@ nativeTheme.on('updated', () => {
 });
 
 // ── 整点报时 ───────────────────────────────────────────────
-// 根据当前小时生成对应的中文时段描述
 function getChimeText() {
-  const now = new Date();
-  const h = now.getHours();
+  const h = new Date().getHours();
   let label;
   if (h === 0) label = '午夜12点';
   else if (h < 6) label = '凌晨' + h + '点';
@@ -190,18 +188,26 @@ function getChimeText() {
   return text;
 }
 
-// 每秒检查一次，在 xx:00:00 时触发整点报时通知
+let chimeTimer = null;
+
+// 计算距离下一个整点的毫秒数，精确触发一次，然后递归调度
+function scheduleNextChime() {
+  const now = new Date();
+  const next = new Date(now);
+  next.setHours(now.getHours() + 1, 0, 0, 0);
+  const delay = next.getTime() - now.getTime();
+  chimeTimer = setTimeout(() => {
+    lastChimeHour = new Date().getHours();
+    new Notification({ title: '桌面时钟 · 整点报时', body: getChimeText(), silent: false, urgency: 'normal' }).show();
+    scheduleNextChime();
+  }, delay);
+}
+
 function startChime() {
-  setInterval(() => {
-    const now = new Date();
-    const h = now.getHours();
-    const m = now.getMinutes();
-    const s = now.getSeconds();
-    if (m === 0 && s === 0 && h !== lastChimeHour) {
-      lastChimeHour = h;
-      new Notification({ title: '桌面时钟 · 整点报时', body: getChimeText(), silent: false, urgency: 'normal' }).show();
-    }
-  }, 1000);
+  scheduleNextChime();
+}
+function stopChime() {
+  if (chimeTimer) { clearTimeout(chimeTimer); chimeTimer = null; }
 }
 
 // ── 应用生命周期 ────────────────────────────────────────────
@@ -216,4 +222,4 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => { app.quit(); });
-app.on('will-quit', () => { globalShortcut.unregisterAll(); });
+app.on('will-quit', () => { globalShortcut.unregisterAll(); stopChime(); });

@@ -9,7 +9,9 @@
 //   - 关闭按钮（悬停变红）
 // 整个标题栏区域可拖拽移动窗口（-webkit-app-region: drag）
 
-export default function TitleBar({ topEnabled, onMinimize, onToggleTop, onClose }) {
+import { memo } from 'react';
+
+function TitleBar({ topEnabled, onMinimize, onToggleTop, onClose }) {
   return (
     <div className="title-bar">
       <span className="title-label">桌面时钟</span>
@@ -38,3 +40,5 @@ export default function TitleBar({ topEnabled, onMinimize, onToggleTop, onClose 
     </div>
   );
 }
+
+export default memo(TitleBar);

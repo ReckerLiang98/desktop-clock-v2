@@ -56,7 +56,7 @@ export default function App() {
   };
 
   // ── 时钟 tick ──────────────────────────────────────────
-  const { time, date } = useClock({ offset, tzOffset: resolvedTz.offset, is24 });
+  const { time, date } = useClock({ offset, tzOffset: resolvedTz.offset, is24, showMs });
 
   // ── 天气（支持手动刷新）──────────────────────────────
   const [weather, setWeather] = useState(null);
@@ -184,8 +184,10 @@ export default function App() {
     setTzManual(null);
     localStorage.removeItem('clock_tz_manual_v2');
     setTzMenuOpen(false);
-    syncTime();  // 重新同步以获取 IP 定位时区
+    syncTime();
   }, [syncTime]);
+
+  const handleTZClick = useCallback(() => setTzMenuOpen(prev => !prev), []);
 
   // ── 键盘快捷键 ────────────────────────────────────────
   useEffect(() => {
@@ -244,7 +246,7 @@ export default function App() {
         {/* 日期 + 农历 + 时区（含时区下拉菜单） */}
         <DateDisplay
           date={date} tz={resolvedTz} tzManual={!!tzManual}
-          onTZClick={() => setTzMenuOpen(!tzMenuOpen)}
+          onTZClick={handleTZClick}
         >
           {tzMenuOpen && (
             <TimezoneMenu

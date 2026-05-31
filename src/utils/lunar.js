@@ -58,7 +58,7 @@ function leapDaysOf(y) { return leapMonthOf(y) ? ((LUNAR_DATA[y - 1900] & 0x1000
 /** 计算农历年的总天数（12 或 13 个月相加） */
 function daysInLunarYear(y) {
   let t = 0, d = LUNAR_DATA[y - 1900];
-  for (let m = 0; m < 12; m++) t += (d & (0x10000 >> m)) ? 30 : 29;
+  for (let m = 0; m < 12; m++) t += (d & (0x8000 >> m)) ? 30 : 29;
   return t + leapDaysOf(y);
 }
 
@@ -186,7 +186,7 @@ export function getHoliday(sy, sm, sd, lunar) {
   // 除夕：农历腊月最后一天（腊月29或30）
   const info = LUNAR_DATA[lunar.year - 1900];
   // 腊月（12月）天数
-  const laYueDays = (info & (0x10000 >> 11)) ? 30 : 29;
+  const laYueDays = (info & 0x10) ? 30 : 29;
   if (lunar.month === 12 && lunar.day === laYueDays && !lunar.isLeap) return '除夕';
 
   return null;
@@ -207,7 +207,7 @@ export function solarToLunar(sy, sm, sd) {
 
   // 定位农历月日
   for (let m = 1; m <= 12; m++) {
-    const md = (info & (0x10000 >> (m - 1))) ? 30 : 29;  // 当月天数
+    const md = (info & (0x8000 >> (m - 1))) ? 30 : 29;  // 当月天数
     if (off < md) { ld = off + 1; lm = m; break; }
     off -= md;
 

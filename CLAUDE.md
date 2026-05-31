@@ -16,6 +16,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev         # Dev: starts Vite + launches Electron (loads from http://localhost:5173)
 npm run pack        # Production step 1: vite build + electron-packager → release/桌面时钟-win32-x64/
 npm run dist        # Production step 2: electron-builder NSIS installer from pre-packaged app
+npm test            # Run all 121 unit tests (vitest)
+npm run test:watch  # Run tests in watch mode
 ```
 
 `npm run dev` uses `concurrently` to run Vite and Electron in parallel, with `wait-on` ensuring Electron launches only after the Vite dev server is ready. `cross-env DEV=true` tells `electron/main.js` to load from the dev server instead of `dist/index.html`.
@@ -92,3 +94,5 @@ fetchWeather (wttr.in → Open-Meteo fallback)  ──►  Weather
 - **Weather Open-Meteo fallback has no humidity**: The Open-Meteo path sets `humidity: ''`. Always conditionally render humidity: `{data.humidity && <span>💧{data.humidity}</span>}`.
 - **Solar term only shows on exact day**: `isSolarTermDay()` returns `null` on non-term days. The DateDisplay renders nothing (`null`) when both `holiday` and `solarTerm` are falsy — avoid empty `<div>` elements that consume vertical space from `margin-top` + `line-height`.
 - **GitHub Release upload via Node.js https module**: No `gh` CLI available. Use `https.request` to call GitHub API (Create Release → DELETE old assets → Upload asset). Need classic PAT with `repo` scope.
+- **Lunar calendar bit offset MUST use `0x8000` as starting mask**: The 12 month sizes are stored in bits 4-15, with month 1 (正月) at bit 15. The bit-reading loops must start at `0x8000` (bit 15) and shift right, NOT `0x10000` (bit 16) — using the wrong mask shifts all month sizes by one position, causing all lunar dates to be systematically wrong. This bug was present in three places (`daysInLunarYear`, `solarToLunar` month loop, `getHoliday` 腊月 calculation) and was discovered by test cases comparing against known Chinese New Year dates.
+- **Test infrastructure uses vitest + jsdom**: Test files in `src/tests/` with setup in `src/tests/setup.js`. The setup mocks `window.matchMedia` (not implemented by jsdom) and `window.electronAPI` (contextBridge). Vitest config in `vitest.config.js` uses `@vitejs/plugin-react` and `jsdom` environment. Do NOT use JSON.stringify to serialize hook return values in tests — functions (useCallback, setState) are lost. Use test helper components with data-testid attributes instead.

@@ -6,5 +6,9 @@ export default defineConfig({
   base: './',
   build: {
     outDir: 'dist',
+    sourcemap: false,
+    minify: 'esbuild',
+    cssMinify: true,
+    reportCompressedSize: false,
   },
 });
