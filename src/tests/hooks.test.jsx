@@ -43,10 +43,10 @@ describe('useClock', () => {
     expect(['凌晨', '早上', '上午', '中午', '下午', '傍晚', '晚上']).toContain(ampm);
   });
 
-  it('showMs=false 时 ms 字段为 "000"', async () => {
+  it('showMs=false 时 ms 字段仍为 .XXX 格式（保持布局宽度）', async () => {
     render(<ClockTester offset={0} tzOffset={28800} is24={true} showMs={false} />);
     await new Promise(r => setTimeout(r, 100));
-    expect(screen.getByTestId('ms').textContent).toBe('000');
+    expect(screen.getByTestId('ms').textContent).toMatch(/^\.\d{3}$/);
   });
 
   it('showMs=true 时 ms 字段以 . 开头', async () => {

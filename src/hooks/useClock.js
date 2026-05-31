@@ -51,7 +51,7 @@ export function useClock({ offset, tzOffset, is24, showMs }) {
           h: String(displayH).padStart(2, '0'),
           m: String(m).padStart(2, '0'),
           s: String(s).padStart(2, '0'),
-          ms: showMsRef.current ? '.' + String(ms).padStart(3, '0') : '000',
+          ms: '.' + String(ms).padStart(3, '0'),
           ampm,
         });
 
