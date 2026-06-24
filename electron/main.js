@@ -11,6 +11,7 @@ let win = null;           // 主窗口实例
 let tray = null;          // 系统托盘实例
 let alwaysOnTop = false;  // 窗口置顶状态
 let lastChimeHour = -1;   // 上一次整点报时的小时数，防止重复报时
+let dndEnabled = false;   // 免打扰模式：开启时静默跳过整点报时通知
 let latestWeather = null; // 最新天气数据，由渲染进程通过 IPC 发送
 
 // ── 创建主窗口 ─────────────────────────────────────────────
@@ -119,6 +120,9 @@ function updateTrayMenu() {
         win.webContents.send('always-on-top-changed', alwaysOnTop);
       }
     }},
+    { label: '免打扰', type: 'checkbox', checked: dndEnabled, click: (mi) => {
+      dndEnabled = mi.checked;
+    }},
     { type: 'separator' },
     { label: '退出', click: () => { app.quit(); } },
   ]);
@@ -149,7 +153,9 @@ ipcMain.on('hide-window', () => {
     win.hide();
     if (!trayNotified) {
       trayNotified = true;
-      new Notification({ title: '桌面时钟', body: '桌面时钟正在后台运行，双击托盘图标可恢复窗口', silent: true, urgency: 'low' }).show();
+      const notif = new Notification({ title: '桌面时钟', body: '桌面时钟正在后台运行，双击托盘图标可恢复窗口', silent: true, urgency: 'low' });
+      notif.on('click', () => { if (win) { win.show(); win.focus(); } });
+      notif.show();
     }
   }
 });
@@ -198,7 +204,11 @@ function scheduleNextChime() {
   const delay = next.getTime() - now.getTime();
   chimeTimer = setTimeout(() => {
     lastChimeHour = new Date().getHours();
-    new Notification({ title: '桌面时钟 · 整点报时', body: getChimeText(), silent: false, urgency: 'normal' }).show();
+    if (!dndEnabled) {
+      const notif = new Notification({ title: '桌面时钟 · 整点报时', body: getChimeText(), silent: false, urgency: 'normal' });
+      notif.on('click', () => { if (win) { win.show(); win.focus(); } });
+      notif.show();
+    }
     scheduleNextChime();
   }, delay);
 }
