@@ -25,13 +25,7 @@ function TitleBar({ topEnabled, onMinimize, onToggleTop, onSettings, onClose }) 
           </svg>
         </button>
         {/* 设置按钮 */}
-        <button className="win-btn" onClick={onSettings} title="设置 (S)">
-          <svg width="14" height="14" viewBox="0 0 16 16">
-            <circle cx="8" cy="8" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.2"/>
-            <path d="M8 1v2.5M8 12.5V15M1 8h2.5M12.5 8H15M3.05 3.05l1.77 1.77M11.18 11.18l1.77 1.77M3.05 12.95l1.77-1.77M11.18 4.82l1.77-1.77"
-              stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-          </svg>
-        </button>
+        <button className="win-btn" onClick={onSettings} title="设置 (S)">⚙</button>
         {/* 最小化按钮 */}
         <button className="win-btn" onClick={onMinimize} title="最小化">
           <svg width="12" height="12" viewBox="0 0 12 12">
