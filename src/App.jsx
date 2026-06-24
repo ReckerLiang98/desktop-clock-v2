@@ -26,6 +26,7 @@ import Toolbar from './components/Toolbar';
 import TimezoneMenu from './components/TimezoneMenu';
 import Weather from './components/Weather';
 import WarningBanner from './components/WarningBanner';
+import SettingsDialog from './components/SettingsDialog';
 import CloseDialog from './components/CloseDialog';
 
 export default function App() {
@@ -171,6 +172,11 @@ export default function App() {
   // ── 关闭对话框 ────────────────────────────────────────
   const [showClose, setShowClose] = useState(false);
 
+  // ── 设置对话框 ────────────────────────────────────────
+  const [showSettings, setShowSettings] = useState(false);
+  const openSettings = useCallback(() => setShowSettings(true), []);
+  const closeSettings = useCallback(() => setShowSettings(false), []);
+
   // ── 窗口自适应调整 ────────────────────────────────────
   // 测量 .container 的实际尺寸来调整窗口，缓存上次尺寸避免重复 setSize
   const lastSize = useRef({ w: 0, h: 0 });
@@ -267,10 +273,14 @@ export default function App() {
       if (e.key === 't' || e.key === 'T') cycleTheme();    // T → 切换主题
       if (e.key === 'r' || e.key === 'R') syncTime();      // R → 同步时间
       if (e.key === 'w' || e.key === 'W') loadWeather();   // W → 刷新天气
+      if (e.key === 's' || e.key === 'S') {                // S → 设置
+        e.preventDefault();
+        openSettings();
+      }
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [toggle24, toggleMs, cycleTheme, syncTime, loadWeather]);
+  }, [toggle24, toggleMs, cycleTheme, syncTime, loadWeather, openSettings]);
 
   // ── 监听主进程置顶状态变化（托盘菜单切换时同步） ────
   useEffect(() => {
@@ -350,10 +360,16 @@ export default function App() {
           is24={is24} showMs={showMs} themeMode={mode}
           onToggle24={toggle24} onToggleMs={toggleMs}
           onCycleTheme={cycleTheme} onSync={syncTime}
+          onSettings={openSettings}
         />
 
-        <div className="hint">拖动窗口 · F=格式 · M=毫秒 · T=主题 · R=同步 · W=天气</div>
+        <div className="hint">拖动窗口 · F=格式 · M=毫秒 · T=主题 · R=同步 · W=天气 · S=设置</div>
       </div>
+
+      {/* 设置对话框（模态弹窗） */}
+      {showSettings && (
+        <SettingsDialog onClose={closeSettings} />
+      )}
 
       {/* 关闭对话框（模态弹窗） */}
       {showClose && (

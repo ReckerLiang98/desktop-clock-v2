@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import ClockFace from '../components/ClockFace';
 import DateDisplay from '../components/DateDisplay';
 import Toolbar from '../components/Toolbar';
@@ -9,6 +9,7 @@ import { WARNING_SEVERITY } from '../services/api';
 import SyncStatus from '../components/SyncStatus';
 import TitleBar from '../components/TitleBar';
 import CloseDialog from '../components/CloseDialog';
+import SettingsDialog from '../components/SettingsDialog';
 import TimezoneMenu from '../components/TimezoneMenu';
 import { TZ_LIST } from '../utils/constants';
 
@@ -146,6 +147,7 @@ describe('Toolbar', () => {
     onToggleMs: () => {},
     onCycleTheme: () => {},
     onSync: () => {},
+    onSettings: () => {},
   };
 
   it('24h 模式下 12h 按钮不高亮', () => {
@@ -202,6 +204,11 @@ describe('Toolbar', () => {
     const { container } = render(<Toolbar {...baseProps} />);
     const svg = container.querySelector('svg');
     expect(svg).toBeTruthy();
+  });
+
+  it('包含设置按钮（齿轮图标）', () => {
+    const { container } = render(<Toolbar {...baseProps} />);
+    expect(container.textContent).toContain('⚙️');
   });
 });
 
@@ -471,6 +478,77 @@ describe('CloseDialog', () => {
   it('显示询问标题', () => {
     render(<CloseDialog onHideToTray={() => {}} onQuit={() => {}} onCancel={() => {}} />);
     expect(screen.getByText('关闭桌面时钟')).toBeInTheDocument();
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   SettingsDialog 组件测试
+   ═══════════════════════════════════════════════════════════ */
+describe('SettingsDialog', () => {
+  it('渲染"设置"标题', () => {
+    render(<SettingsDialog onClose={() => {}} />);
+    expect(screen.getByText('设置')).toBeInTheDocument();
+  });
+
+  it('渲染 API Key 输入框', () => {
+    render(<SettingsDialog onClose={() => {}} />);
+    const input = screen.getByPlaceholderText('填入 Key 以启用气象预警');
+    expect(input).toBeTruthy();
+    expect(input.type).toBe('password');  // 默认隐藏
+  });
+
+  it('渲染显示/隐藏切换按钮', () => {
+    render(<SettingsDialog onClose={() => {}} />);
+    expect(screen.getByText('👁️')).toBeInTheDocument();
+  });
+
+  it('渲染"保存"和"取消"按钮', () => {
+    render(<SettingsDialog onClose={() => {}} />);
+    expect(screen.getByText('保存')).toBeInTheDocument();
+    expect(screen.getByText('取消')).toBeInTheDocument();
+  });
+
+  it('渲染注册链接提示', () => {
+    render(<SettingsDialog onClose={() => {}} />);
+    expect(screen.getByText(/console\.qweather\.com/)).toBeInTheDocument();
+    expect(screen.getByText(/每日 1000 次免费调用/)).toBeInTheDocument();
+  });
+
+  it('输入框默认密码模式', () => {
+    render(<SettingsDialog onClose={() => {}} />);
+    const input = screen.getByPlaceholderText('填入 Key 以启用气象预警');
+    expect(input.type).toBe('password');
+  });
+
+  it('点击显示按钮后切换为文本模式', async () => {
+    render(<SettingsDialog onClose={() => {}} />);
+    const toggleBtn = screen.getByText('👁️');
+    toggleBtn.click();
+    await waitFor(() => {
+      const input = screen.getByPlaceholderText('填入 Key 以启用气象预警');
+      expect(input.type).toBe('text');
+    });
+    expect(screen.getByText('🙈')).toBeInTheDocument();
+  });
+
+  it('保存按钮有 primary 样式类', () => {
+    const { container } = render(<SettingsDialog onClose={() => {}} />);
+    const saveBtn = screen.getByText('保存');
+    expect(saveBtn.classList.contains('primary')).toBe(true);
+  });
+
+  it('保存后自动关闭对话框', async () => {
+    let closed = false;
+    const onClose = () => { closed = true; };
+    render(<SettingsDialog onClose={onClose} />);
+    const saveBtn = screen.getByText('保存');
+    saveBtn.click();
+    await waitFor(() => { expect(closed).toBe(true); }, { timeout: 2000 });
+  });
+
+  it('对话框有 settings-dialog CSS 类', () => {
+    const { container } = render(<SettingsDialog onClose={() => {}} />);
+    expect(container.querySelector('.settings-dialog')).toBeTruthy();
   });
 });
 

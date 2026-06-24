@@ -575,6 +575,86 @@ body {
 }
 .dialog-check input { accent-color: var(--accent); }
 
+/* ── 设置对话框 ──────────────────────────────────── */
+.settings-dialog {
+  width: 360px;
+  max-width: calc(100vw - 40px);
+}
+
+.settings-field {
+  margin-bottom: 12px;
+}
+
+.settings-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.settings-input-row {
+  display: flex;
+  gap: 4px;
+}
+
+.settings-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--text-primary);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.settings-input:focus {
+  border-color: var(--accent);
+}
+
+.settings-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.settings-toggle-btn {
+  flex-shrink: 0;
+  width: 36px;
+  background: var(--surface);
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+  font-family: inherit;
+}
+
+.settings-toggle-btn:hover {
+  background: var(--surface-hover);
+}
+
+.settings-hint {
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+
+.settings-link {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.settings-link:hover {
+  opacity: 0.8;
+}
+
 /* ── 窗口动画（模拟 Windows 原生最小化/恢复效果） ── */
 .app-root.minimizing {
   animation: win-minimize 250ms cubic-bezier(0.42, 0, 1, 1) forwards;
