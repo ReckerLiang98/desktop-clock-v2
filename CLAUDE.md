@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-桌面时钟 (Desktop Clock v2) — Electron + React + Vite. Frameless transparent window with millisecond-precision time display, network time sync (RTT-compensated), IP-based timezone & weather, 24 solar terms (二十四节气), Chinese holidays (节假日), Chinese lunar calendar (1900–2100), Fluent Design dark/light themes (auto-follow system or manual), system tray + hourly chime notifications (with Do Not Disturb mode), and notification click-to-show.
+桌面时钟 (Desktop Clock v2) — Electron + React + Vite. Frameless transparent window with millisecond-precision time display, network time sync (RTT-compensated), IP-based timezone & weather, 24 solar terms (二十四节气), Chinese holidays (节假日), Chinese lunar calendar (1900–2100), Fluent Design dark/light themes (auto-follow system or manual), system tray + hourly chime notifications (with Do Not Disturb mode), China weather alerts (气象预警, QWeather API, 15-min interval), and notification click-to-show.
 
 ## Commands
 
@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev         # Dev: starts Vite + launches Electron (loads from http://localhost:5173)
 npm run pack        # Production step 1: vite build + electron-packager → release/桌面时钟-win32-x64/
 npm run dist        # Production step 2: electron-builder NSIS installer from pre-packaged app
-npm test            # Run all 121 unit tests (vitest)
+npm test            # Run all 133 unit tests (vitest)
 npm run test:watch  # Run tests in watch mode
 ```
 
@@ -51,6 +51,8 @@ useClock (corrected time tick @ 33ms)  ──►  ClockFace, DateDisplay
 useSystemTheme (auto/dark/light)       ──►  CSS class on .app-root
      │
 fetchWeather (wttr.in → Open-Meteo fallback)  ──►  Weather
+     │
+fetchWarnings (QWeather alert v1, 15min interval)  ──►  WarningBanner
 ```
 
 - **Time computation chain**: `Date.now() + offset (network correction) + tzOffset (seconds) = local time at target timezone`. All time math happens in `useClock.js:tick()`.
@@ -69,7 +71,9 @@ fetchWeather (wttr.in → Open-Meteo fallback)  ──►  Weather
 
 - **Window resize** (`App.jsx:resizeWindow`): Measures `.container.offsetWidth/Height` (not `#root`'s viewport-dependent dimensions), adds +32/+56 padding for window chrome. Uses double `requestAnimationFrame` to wait for layout. Has a 200px minimum-size guard to prevent setting a near-zero window (container hasn't laid out yet when called too early). Caches `lastSize` ref to skip redundant `setSize` calls. **Important**: Never call `resizeWindow` in a mount effect — the container will not have its final layout yet.
 
-- **Weather** (`src/services/api.js`): Primary source is wttr.in with `lang=zh-cn` (single request, IP location + weather in one call, fastest). Fallback is Open-Meteo + ipapi.co (two sequential requests, WMO codes mapped to Chinese). Weather fetch fires immediately on mount — it does NOT wait for `clientIp` from time sync. Auto-refreshes every hour (`setInterval` in App.jsx). Refresh via W key, toolbar refresh button, or the Weather component's refresh button. After each successful fetch, weather data is sent to the main process via IPC (`update-weather`) for inclusion in hourly chime notifications.
+- **Weather** (`src/services/api.js`): Primary source is wttr.in with `lang=zh-cn` (single request, IP location + weather in one call, fastest). Fallback is Open-Meteo + ipapi.co (two sequential requests, WMO codes mapped to Chinese). Weather fetch fires immediately on mount — it does NOT wait for `clientIp` from time sync. Auto-refreshes every hour (`setInterval` in App.jsx). Refresh via W key, toolbar refresh button, or the Weather component's refresh button. After each successful fetch, weather data is sent to the main process via IPC (`update-weather`) for inclusion in hourly chime notifications. **The weather response now also returns `latitude`/`longitude`** (extracted from wttr.in `nearest_area` or ipapi.co), which are stored in `weatherCoordsRef` and used as input for the weather warnings API.
+
+- **Weather Warnings / 气象预警** (`src/services/api.js:fetchWarnings`): Uses QWeather (和风天气) Weather Alert v1 API (`devapi.qweather.com/weatheralert/v1/current/{lat}/{lon}`). Free tier: 1000 calls/day. Returns China's 4-color warning system (🔵蓝/🟡黄/🟠橙/🔴红) with headline, type, description, and instruction. The API key is stored in `localStorage('clock_qweather_key_v2')` — if absent, the feature is silently disabled. The renderer checks every 15 minutes (`setInterval` in App.jsx) and on every weather fetch. When new warnings appear (detected by comparing `prevWarningsRef` IDs), a system `Notification` is sent for each new alert. Warning data is also pushed to the main process via IPC (`update-warnings`) for inclusion in hourly chime notifications (`getChimeText()` appends the most severe active warning). The `WarningBanner` component displays active warnings between the date area and weather bar, color-coded by severity. Warning appearance/disappearance triggers `resizeWindow`.
 
 - **Milliseconds toggle**: `showMs` state (default `false`). Controlled via `.ms` toolbar button or M key. The ms span always occupies layout space (`visibility` toggle) so window doesn't resize.
 
@@ -100,4 +104,7 @@ fetchWeather (wttr.in → Open-Meteo fallback)  ──►  Weather
 - **GitHub Release upload**: Use `gh release create vX.Y.Z <asset-path> --title ... --notes ...`. The `gh` CLI is authenticated as ReckerLiang98. If the fine-grained PAT is missing `releases` permission, fall back to Node.js `https.request` with a classic PAT.
 - **Lunar calendar bit offset MUST use `0x8000` as starting mask**: The 12 month sizes are stored in bits 4-15, with month 1 (正月) at bit 15. The bit-reading loops must start at `0x8000` (bit 15) and shift right, NOT `0x10000` (bit 16) — using the wrong mask shifts all month sizes by one position, causing all lunar dates to be systematically wrong. This bug was present in three places (`daysInLunarYear`, `solarToLunar` month loop, `getHoliday` 腊月 calculation) and was discovered by test cases comparing against known Chinese New Year dates.
 - **Do Not Disturb is tray-only**: The DND toggle only exists in the tray right-click menu (`updateTrayMenu()`). There is intentionally no renderer-side DND button, keyboard shortcut, or React state. Future instances should not add a UI control for it in the main window.
+- **Weather warnings need a QWeather API key**: The `clock_qweather_key_v2` localStorage key must be set (via dev console or future settings UI) for weather warnings to work. Register at console.qweather.com (free tier). Without a key, the feature is silently disabled — no errors, no UI.
+- **WARNING_SEVERITY keys are color codes, not severity enum values**: QWeather returns `color.code` as `'blue'/'yellow'/'orange'/'red'`. The `WARNING_SEVERITY` map in api.js uses these color strings as keys — NOT the `severity` field values (`'minor'/'moderate'/'severe'/'extreme'`).
+- **New warnings trigger notifications via the renderer, not the main process**: Unlike hourly chime notifications (main process), new-warning alerts use the renderer-side `Notification` constructor. This avoids IPC round-trips for real-time alerting — the renderer detects new warnings by diffing `prevWarningsRef`.
 - **Test infrastructure uses vitest + jsdom**: Test files in `src/tests/` with setup in `src/tests/setup.js`. The setup mocks `window.matchMedia` (not implemented by jsdom) and `window.electronAPI` (contextBridge). Vitest config in `vitest.config.js` uses `@vitejs/plugin-react` and `jsdom` environment. Do NOT use JSON.stringify to serialize hook return values in tests — functions (useCallback, setState) are lost. Use test helper components with data-testid attributes instead.

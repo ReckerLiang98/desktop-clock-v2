@@ -27,8 +27,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   /** 向主进程发送最新天气数据（用于整点报时附送天气） */
   updateWeather: (data) => ipcRenderer.send('update-weather', data),
 
-		/** 推送托盘提示文本（时间 + 天气） */
-		updateTrayTooltip: (text) => ipcRenderer.send('update-tray-tooltip', text),
+  /** 向主进程发送最新气象预警数据（用于整点报时附送预警） */
+  updateWarnings: (data) => ipcRenderer.send('update-warnings', data),
+
+  /** 推送托盘提示文本（时间 + 天气） */
+  updateTrayTooltip: (text) => ipcRenderer.send('update-tray-tooltip', text),
 
   /** 窗口从任务栏恢复时触发 */
   onWindowRestored: (cb) => {

@@ -16,7 +16,7 @@ import { useClock } from './hooks/useClock';
 import { useTimeSync } from './hooks/useTimeSync';
 import { useSystemTheme } from './hooks/useSystemTheme';
 import { TZ_LIST } from './utils/constants';
-import { fetchWeather } from './services/api';
+import { fetchWeather, fetchWarnings } from './services/api';
 import { getSystemTZ } from './utils/constants';
 import TitleBar from './components/TitleBar';
 import SyncStatus from './components/SyncStatus';
@@ -25,6 +25,7 @@ import DateDisplay from './components/DateDisplay';
 import Toolbar from './components/Toolbar';
 import TimezoneMenu from './components/TimezoneMenu';
 import Weather from './components/Weather';
+import WarningBanner from './components/WarningBanner';
 import CloseDialog from './components/CloseDialog';
 
 export default function App() {
@@ -62,6 +63,8 @@ export default function App() {
   const [weather, setWeather] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const weatherRef = useRef(null);
+  // 存储天气返回的经纬度，供气象预警 API 使用
+  const weatherCoordsRef = useRef(null);
 
   const loadWeather = useCallback(async () => {
     setWeatherLoading(true);
@@ -70,11 +73,68 @@ export default function App() {
       if (data) {
         setWeather(data);
         window.electronAPI?.updateWeather(data);
+        // 提取经纬度用于气象预警查询
+        if (data.latitude != null && data.longitude != null) {
+          weatherCoordsRef.current = { lat: data.latitude, lon: data.longitude };
+        }
       }
     } finally {
       setWeatherLoading(false);
     }
   }, []);
+
+  // ── 气象预警（每 15 分钟检查一次）───────────────────
+  const [warnings, setWarnings] = useState(null);
+  const [warningsLoading, setWarningsLoading] = useState(false);
+  const prevWarningsRef = useRef(null);  // 用于检测新增预警（触发系统通知）
+
+  const loadWarnings = useCallback(async () => {
+    const apiKey = localStorage.getItem('clock_qweather_key_v2');
+    const coords = weatherCoordsRef.current;
+    if (!apiKey || !coords) return;  // 无 Key 或坐标时静默跳过
+
+    setWarningsLoading(true);
+    try {
+      const data = await fetchWarnings(coords.lat, coords.lon, apiKey);
+      if (data !== null) {
+        // 检测新增预警：对比 prevWarningsRef 中不存在的 id
+        const prev = prevWarningsRef.current || [];
+        const prevIds = new Set(prev.map(w => w.id));
+        const newAlerts = data.filter(w => !prevIds.has(w.id));
+
+        // 对每条新增预警发送系统通知
+        if (newAlerts.length > 0) {
+          for (const alert of newAlerts) {
+            const sevLabel = { blue: '🔵', yellow: '🟡', orange: '🟠', red: '🔴' }[alert.color] || '⚠️';
+            const notif = new Notification('桌面时钟 · 气象预警', {
+              body: `${sevLabel} ${alert.headline}`,
+              silent: false,
+            });
+            notif.onclick = () => { window.focus(); };
+          }
+        }
+
+        prevWarningsRef.current = data;
+        setWarnings(data);
+        window.electronAPI?.updateWarnings(data);
+      }
+    } finally {
+      setWarningsLoading(false);
+    }
+  }, []);
+
+  // 天气加载成功后立即检查一次预警（天气更新时会自动重查）
+  useEffect(() => {
+    if (weather?.latitude != null && weather?.longitude != null) {
+      loadWarnings();
+    }
+  }, [weather?.latitude, weather?.longitude, loadWarnings]);
+
+  // 每 15 分钟自动刷新气象预警
+  useEffect(() => {
+    const id = setInterval(() => { loadWarnings(); }, 900000);
+    return () => clearInterval(id);
+  }, [loadWarnings]);
 
   // 应用启动后立即获取天气（不等待 IP 同步，wttr.in 自带 IP 定位）
   useEffect(() => {
@@ -141,6 +201,16 @@ export default function App() {
       resizeWindow();
     }
   }, [weather, resizeWindow]);
+
+  // 预警数据出现/消失后调整窗口
+  const prevHasWarnings = useRef(!!(warnings && warnings.length > 0));
+  useEffect(() => {
+    const hasWarnings = !!(warnings && warnings.length > 0);
+    if (hasWarnings !== prevHasWarnings.current) {
+      prevHasWarnings.current = hasWarnings;
+      resizeWindow();
+    }
+  }, [warnings, resizeWindow]);
 
   // ── 事件处理（使用函数式状态更新避免闭包过期） ──────
   const toggle24 = useCallback(() => { setIs24(prev => !prev); }, []);
@@ -260,6 +330,9 @@ export default function App() {
             />
           )}
         </DateDisplay>
+
+        {/* 气象预警信号（中国境内四色预警） */}
+        <WarningBanner warnings={warnings} loading={warningsLoading} />
 
         {/* IP 定位天气显示（含刷新按钮） */}
         {weather && (

@@ -14,12 +14,25 @@ import { useState, useEffect, useCallback } from 'react';
 
 const STORAGE_KEY = 'clock_theme_mode'; // 持久化到 localStorage 的 key
 
+/**
+ * 同步获取当前系统主题（Electron 和浏览器均可用）
+ * Electron 中 nativeTheme.shouldUseDarkColors 会同步反映到
+ * prefers-color-scheme 媒体查询，因此 matchMedia 可以安全使用
+ */
+function getInitialSystemTheme() {
+  if (window.matchMedia) {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  return 'dark'; // 极端降级
+}
+
 export function useSystemTheme() {
   // 从 localStorage 恢复上次的主题模式，默认为 'auto'（跟随系统）
   const [mode, setMode] = useState(() => localStorage.getItem(STORAGE_KEY) || 'auto');
-  const [systemTheme, setSystemTheme] = useState('dark');
+  // 同步读取系统主题作为初始值，避免硬编码 'dark' 导致的首次渲染闪烁
+  const [systemTheme, setSystemTheme] = useState(getInitialSystemTheme);
 
-  // 监听 Electron 主进程发来的系统主题变化通知
+  // 监听 Electron 主进程发来的系统主题变化通知（主要变更通道）
   useEffect(() => {
     if (window.electronAPI?.onNativeThemeChanged) {
       window.electronAPI.onNativeThemeChanged((theme) => {
@@ -28,13 +41,11 @@ export function useSystemTheme() {
     }
   }, []);
 
-  // 降级方案：通过浏览器 matchMedia API 监听系统主题
+  // 双重监听：matchMedia 作为 Electron 和浏览器的统一降级通道
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = (e) => setSystemTheme(e.matches ? 'dark' : 'light');
     mq.addEventListener('change', handler);
-    // 仅在无 Electron API 时使用 matchMedia 初始值
-    if (!window.electronAPI) setSystemTheme(mq.matches ? 'dark' : 'light');
     return () => mq.removeEventListener('change', handler);
   }, []);
 

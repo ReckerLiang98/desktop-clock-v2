@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════
-//  API 服务层 — 网络时间同步 & IP 定位天气
+//  API 服务层 — 网络时间同步 & IP 定位天气 & 气象预警
 // ═══════════════════════════════════════════════════════════
 
 // 网络时间服务端点（按优先级排列）
@@ -110,6 +110,14 @@ const WMO_INFO = {
   99: ['⛈️', '强冰雹雷暴'],
 };
 
+// 气象预警等级 → 中文标签 + emoji（按 QWeather 颜色代码索引）
+const WARNING_SEVERITY = {
+  blue:    { label: '蓝色预警', color: '#3388FF', emoji: '🔵' },
+  yellow:  { label: '黄色预警', color: '#E8B800', emoji: '🟡' },
+  orange:  { label: '橙色预警', color: '#E87800', emoji: '🟠' },
+  red:     { label: '红色预警', color: '#E83030', emoji: '🔴' },
+};
+
 /**
  * 获取天气数据（基于设备 IP 地址定位，优先 wttr.in 单请求快速响应，Open-Meteo 作为备用）
  *
@@ -117,7 +125,7 @@ const WMO_INFO = {
  *   1. wttr.in      — 单次请求，IP 定位 + 天气一并返回（最快）
  *   2. Open-Meteo + ipapi.co — 两次请求，无 rate-limit，作为可靠备用
  *
- * @returns {{ location, country, temp, weather, humidity, icon, iconEmoji } | null}
+ * @returns {{ location, country, latitude, longitude, temp, weather, humidity, icon, iconEmoji } | null}
  */
 export async function fetchWeather() {
   // ── 方案一：wttr.in（单请求，速度最快）──
@@ -131,6 +139,8 @@ export async function fetchWeather() {
       return {
         location: data.nearest_area?.[0]?.areaName?.[0]?.value || '',
         country: data.nearest_area?.[0]?.country?.[0]?.value || '',
+        latitude: data.nearest_area?.[0]?.latitude || null,
+        longitude: data.nearest_area?.[0]?.longitude || null,
         temp: cur.temp_C + '°C',
         weather: cur.weatherDesc[0].value,
         humidity: cur.humidity + '%',
@@ -161,6 +171,8 @@ export async function fetchWeather() {
     return {
       location: geo.city || geo.region || '未知位置',
       country: geo.country_name || '',
+      latitude: geo.latitude,
+      longitude: geo.longitude,
       temp: Math.round(cur.temperature) + '°C',
       weather: info[1],
       humidity: '',
@@ -171,3 +183,49 @@ export async function fetchWeather() {
 
   return null;
 }
+
+/**
+ * 获取中国境内气象预警信号（和风天气 Weather Alert v1 API）
+ *
+ * 数据源：devapi.qweather.com（免费订阅，每日 1000 次调用）
+ * 每 15 分钟调用一次，仅需 96 次/天
+ *
+ * @param {number} lat - 纬度
+ * @param {number} lon - 经度
+ * @param {string} apiKey - 和风天气 API Key
+ * @returns {Array<{id, headline, severity, color, typeName, description, instruction, effectiveTime, expireTime}> | null}
+ *         无预警时返回 []，网络/API 错误时返回 null
+ */
+export async function fetchWarnings(lat, lon, apiKey) {
+  if (!lat || !lon || !apiKey) return null;
+
+  try {
+    const url = `https://devapi.qweather.com/weatheralert/v1/current/${lat}/${lon}?key=${apiKey}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return null;
+    const data = await res.json();
+
+    // QWeather 返回码：200 = 成功，204 = 无数据，其余 = 错误
+    if (data.code !== '200') return null;
+
+    const alerts = data.alerts || data.alert || [];
+    if (!Array.isArray(alerts) || alerts.length === 0) return [];
+
+    // 精简字段：只保留 UI 和通知所需的
+    return alerts.map(a => ({
+      id: a.id || '',
+      headline: a.headline || a.title || '',
+      severity: a.severity || 'minor',
+      color: (a.color && a.color.code) ? a.color.code : (a.severityColor || 'blue'),
+      typeName: (a.eventType && a.eventType.name) ? a.eventType.name : (a.typeName || ''),
+      description: a.description || a.text || '',
+      instruction: a.instruction || '',
+      effectiveTime: a.effectiveTime || a.startTime || '',
+      expireTime: a.expireTime || a.endTime || '',
+    }));
+  } catch (_) {
+    return null;
+  }
+}
+
+export { WARNING_SEVERITY };

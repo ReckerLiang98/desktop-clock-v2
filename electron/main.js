@@ -12,7 +12,8 @@ let tray = null;          // 系统托盘实例
 let alwaysOnTop = false;  // 窗口置顶状态
 let lastChimeHour = -1;   // 上一次整点报时的小时数，防止重复报时
 let dndEnabled = false;   // 免打扰模式：开启时静默跳过整点报时通知
-let latestWeather = null; // 最新天气数据，由渲染进程通过 IPC 发送
+let latestWeather = null;  // 最新天气数据，由渲染进程通过 IPC 发送
+let latestWarnings = null; // 最新气象预警数据，由渲染进程通过 IPC 发送
 
 // ── 创建主窗口 ─────────────────────────────────────────────
 function createWindow() {
@@ -162,13 +163,17 @@ ipcMain.on('hide-window', () => {
 
 ipcMain.on('close-window', () => { app.quit(); });
 
-	// 接收渲染进程发送的最新天气数据，用于整点报时附送天气信息
-	ipcMain.on('update-weather', (_e, data) => { latestWeather = data; });
+// 接收渲染进程发送的最新天气数据，用于整点报时附送天气信息
+ipcMain.on('update-weather', (_e, data) => { latestWeather = data; });
 
-	// 渲染进程推送托盘提示文本（时间 + 天气）
-	ipcMain.on('update-tray-tooltip', (_e, text) => {
-		if (tray) tray.setToolTip(text);
-	});
+// 接收渲染进程发送的最新气象预警数据，用于整点报时附送预警
+ipcMain.on('update-warnings', (_e, data) => { latestWarnings = data; });
+
+// 渲染进程推送托盘提示文本（时间 + 天气）
+ipcMain.on('update-tray-tooltip', (_e, text) => {
+  if (tray) tray.setToolTip(text);
+});
+
 // ── 系统主题变化监听 ──────────────────────────────────────
 // Windows 切换深色/浅色模式时，通知渲染进程更新 UI 主题
 nativeTheme.on('updated', () => {
@@ -190,6 +195,12 @@ function getChimeText() {
   let text = `🕐 现在是${label}整`;
   if (latestWeather) {
     text += ` | ${latestWeather.iconEmoji} ${latestWeather.weather} ${latestWeather.temp}`;
+  }
+  // 如有活跃气象预警，附加提醒
+  if (latestWarnings && latestWarnings.length > 0) {
+    const top = latestWarnings[0];
+    const sevEmoji = { blue: '🔵', yellow: '🟡', orange: '🟠', red: '🔴' }[top.color] || '⚠️';
+    text += ` | ${sevEmoji} ${top.headline}`;
   }
   return text;
 }

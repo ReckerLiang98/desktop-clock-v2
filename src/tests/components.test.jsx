@@ -4,6 +4,8 @@ import ClockFace from '../components/ClockFace';
 import DateDisplay from '../components/DateDisplay';
 import Toolbar from '../components/Toolbar';
 import Weather from '../components/Weather';
+import WarningBanner from '../components/WarningBanner';
+import { WARNING_SEVERITY } from '../services/api';
 import SyncStatus from '../components/SyncStatus';
 import TitleBar from '../components/TitleBar';
 import CloseDialog from '../components/CloseDialog';
@@ -263,6 +265,100 @@ describe('Weather', () => {
   it('渲染位置信息', () => {
     render(<Weather data={baseData} loading={false} onRefresh={() => {}} />);
     expect(screen.getByText('北京')).toBeInTheDocument();
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   WarningBanner 组件测试
+   ═══════════════════════════════════════════════════════════ */
+describe('WarningBanner', () => {
+  const baseWarning = {
+    id: 'warn-001',
+    headline: '大风蓝色预警',
+    severity: 'minor',
+    color: 'blue',
+    typeName: '大风',
+    description: '预计未来24小时内平均风力可达6级以上',
+    instruction: '关好门窗，加固围板',
+    effectiveTime: '2026-06-24T08:00+08:00',
+    expireTime: '2026-06-25T08:00+08:00',
+  };
+
+  it('warnings 为 null 时返回 null (不渲染)', () => {
+    const { container } = render(<WarningBanner warnings={null} loading={false} />);
+    expect(container.innerHTML).toBe('');
+  });
+
+  it('warnings 为空数组时返回 null (不渲染)', () => {
+    const { container } = render(<WarningBanner warnings={[]} loading={false} />);
+    expect(container.innerHTML).toBe('');
+  });
+
+  it('渲染单条预警的标题', () => {
+    render(<WarningBanner warnings={[baseWarning]} loading={false} />);
+    expect(screen.getByText(/大风蓝色预警/)).toBeInTheDocument();
+  });
+
+  it('渲染预警类型标签', () => {
+    render(<WarningBanner warnings={[baseWarning]} loading={false} />);
+    expect(screen.getByText('大风')).toBeInTheDocument();
+  });
+
+  it('渲染预警颜色圆点', () => {
+    const { container } = render(<WarningBanner warnings={[baseWarning]} loading={false} />);
+    const dot = container.querySelector('.warning-dot');
+    expect(dot).toBeTruthy();
+    // 蓝色预警对应蓝色圆点
+    expect(dot.style.backgroundColor).toBe('rgb(51, 136, 255)');
+  });
+
+  it('预警项有左边框颜色', () => {
+    const { container } = render(<WarningBanner warnings={[baseWarning]} loading={false} />);
+    const item = container.querySelector('.warning-item');
+    expect(item).toBeTruthy();
+    expect(item.style.borderLeftColor).toBe('rgb(51, 136, 255)');
+  });
+
+  it('渲染多条预警时全部显示', () => {
+    const warn2 = { ...baseWarning, id: 'warn-002', headline: '暴雨橙色预警', color: 'orange', typeName: '暴雨' };
+    const { container } = render(<WarningBanner warnings={[baseWarning, warn2]} loading={false} />);
+    const items = container.querySelectorAll('.warning-item');
+    expect(items.length).toBe(2);
+    expect(screen.getByText(/大风蓝色预警/)).toBeInTheDocument();
+    expect(screen.getByText(/暴雨橙色预警/)).toBeInTheDocument();
+  });
+
+  it('不同严重等级使用不同颜色', () => {
+    const redWarn = { ...baseWarning, id: 'warn-red', color: 'red', headline: '台风红色预警' };
+    const { container } = render(<WarningBanner warnings={[redWarn]} loading={false} />);
+    const dot = container.querySelector('.warning-dot');
+    expect(dot.style.backgroundColor).toBe('rgb(232, 48, 48)');
+  });
+
+  it('渲染有效时间范围', () => {
+    const { container } = render(<WarningBanner warnings={[baseWarning]} loading={false} />);
+    // 06-24 08:00 ~ 06-25 08:00
+    expect(container.textContent).toContain('06-24 08:00');
+    expect(container.textContent).toContain('06-25 08:00');
+  });
+
+  it('WARNING_SEVERITY 导出正确的四级映射', () => {
+    expect(WARNING_SEVERITY.blue).toBeDefined();
+    expect(WARNING_SEVERITY.yellow).toBeDefined();
+    expect(WARNING_SEVERITY.orange).toBeDefined();
+    expect(WARNING_SEVERITY.red).toBeDefined();
+    expect(WARNING_SEVERITY.blue.label).toBe('蓝色预警');
+    expect(WARNING_SEVERITY.red.label).toBe('红色预警');
+  });
+
+  it('loading=true 时显示加载指示器', () => {
+    const { container } = render(<WarningBanner warnings={[baseWarning]} loading={true} />);
+    expect(container.querySelector('.warning-loading')).toBeTruthy();
+  });
+
+  it('loading=false 时不显示加载指示器', () => {
+    const { container } = render(<WarningBanner warnings={[baseWarning]} loading={false} />);
+    expect(container.querySelector('.warning-loading')).toBeFalsy();
   });
 });
 
