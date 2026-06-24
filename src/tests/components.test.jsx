@@ -485,11 +485,18 @@ describe('SettingsDialog', () => {
     expect(screen.getByText('设置')).toBeInTheDocument();
   });
 
-  it('渲染 API Key 输入框', () => {
+  it('渲染 API Key 输入框（密码模式）', () => {
     render(<SettingsDialog onClose={() => {}} />);
     const input = screen.getByPlaceholderText('填入 Key 以启用气象预警');
     expect(input).toBeTruthy();
-    expect(input.type).toBe('password');  // 默认隐藏
+    expect(input.type).toBe('password');
+  });
+
+  it('渲染 API Host 输入框', () => {
+    render(<SettingsDialog onClose={() => {}} />);
+    const input = screen.getByPlaceholderText('nr6pg9pdqr.re.qweatherapi.com');
+    expect(input).toBeTruthy();
+    expect(input.type).toBe('text');
   });
 
   it('渲染显示/隐藏切换按钮', () => {
@@ -509,12 +516,6 @@ describe('SettingsDialog', () => {
     expect(screen.getByText(/每日 1000 次免费调用/)).toBeInTheDocument();
   });
 
-  it('输入框默认密码模式', () => {
-    render(<SettingsDialog onClose={() => {}} />);
-    const input = screen.getByPlaceholderText('填入 Key 以启用气象预警');
-    expect(input.type).toBe('password');
-  });
-
   it('点击显示按钮后切换为文本模式', async () => {
     render(<SettingsDialog onClose={() => {}} />);
     const toggleBtn = screen.getByText('👁️');
@@ -527,7 +528,7 @@ describe('SettingsDialog', () => {
   });
 
   it('保存按钮有 primary 样式类', () => {
-    const { container } = render(<SettingsDialog onClose={() => {}} />);
+    render(<SettingsDialog onClose={() => {}} />);
     const saveBtn = screen.getByText('保存');
     expect(saveBtn.classList.contains('primary')).toBe(true);
   });

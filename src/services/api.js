@@ -187,7 +187,7 @@ export async function fetchWeather() {
 /**
  * 获取中国境内气象预警信号（和风天气 Weather Alert v1 API）
  *
- * 数据源：devapi.qweather.com（免费订阅，每日 1000 次调用）
+ * 数据源：QWeather 专属 API Host（每位开发者独立域名）
  * 每 15 分钟调用一次，仅需 96 次/天
  *
  * @param {number} lat - 纬度
@@ -200,15 +200,18 @@ export async function fetchWarnings(lat, lon, apiKey) {
   if (!lat || !lon || !apiKey) return null;
 
   try {
-    const url = `https://devapi.qweather.com/weatheralert/v1/current/${lat}/${lon}?key=${apiKey}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    // QWeather 2026年起使用专属 API Host，旧共享域名 (devapi.qweather.com) 已停用
+    const apiHost = localStorage.getItem('clock_qweather_host_v2') || 'nr6pg9pdqr.re.qweatherapi.com';
+    const url = `https://${apiHost}/weatheralert/v1/current/${lat}/${lon}`;
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'X-QW-Api-Key': apiKey },
+    });
     if (!res.ok) return null;
     const data = await res.json();
 
-    // QWeather 返回码：200 = 成功，204 = 无数据，其余 = 错误
-    if (data.code !== '200') return null;
-
-    const alerts = data.alerts || data.alert || [];
+    // 新 API 直接用 alerts 数组，zeroResult=true 表示无预警
+    const alerts = data.alerts || [];
     if (!Array.isArray(alerts) || alerts.length === 0) return [];
 
     // 精简字段：只保留 UI 和通知所需的

@@ -90,6 +90,10 @@ export default function App() {
   const prevWarningsRef = useRef(null);  // 用于检测新增预警（触发系统通知）
 
   const loadWarnings = useCallback(async () => {
+    // 初始化默认 API Host（QWeather 2026年起使用专属 Host）
+    if (!localStorage.getItem('clock_qweather_host_v2')) {
+      localStorage.setItem('clock_qweather_host_v2', 'nr6pg9pdqr.re.qweatherapi.com');
+    }
     const apiKey = localStorage.getItem('clock_qweather_key_v2');
     const coords = weatherCoordsRef.current;
     if (!apiKey || !coords) return;  // 无 Key 或坐标时静默跳过
