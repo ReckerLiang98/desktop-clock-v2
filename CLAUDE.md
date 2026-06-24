@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-桌面时钟 (Desktop Clock v2) — Electron + React + Vite. Frameless transparent window with millisecond-precision time display, network time sync (RTT-compensated), IP-based timezone & weather, 24 solar terms (二十四节气), Chinese holidays (节假日), Chinese lunar calendar (1900–2100), Fluent Design dark/light themes (auto-follow system or manual), system tray, and hourly chime notifications.
+桌面时钟 (Desktop Clock v2) — Electron + React + Vite. Frameless transparent window with millisecond-precision time display, network time sync (RTT-compensated), IP-based timezone & weather, 24 solar terms (二十四节气), Chinese holidays (节假日), Chinese lunar calendar (1900–2100), Fluent Design dark/light themes (auto-follow system or manual), system tray + hourly chime notifications (with Do Not Disturb mode), and notification click-to-show.
 
 ## Commands
 
@@ -32,7 +32,11 @@ Packaging is two-step because electron-builder alone triggers Windows Defender f
 electron/main.js  ──(IPC)──  electron/preload.js  ──(contextBridge)──  src/ (React renderer)
 ```
 
-The main process manages the `BrowserWindow` (frameless, transparent, default 600×440, min 440×340), `Tray`, `Notification` (hourly chime with weather info), and `nativeTheme` monitoring. Weather data is sent from the renderer via IPC (`update-weather`) and stored in `latestWeather` for inclusion in chime notifications (`"🕐 现在是…整 | ☀️ 晴天 22°C"`). It exposes no Node.js APIs directly — the preload script uses `contextBridge.exposeInMainWorld('electronAPI', ...)` to inject a limited set of IPC methods. The renderer calls `window.electronAPI.*` for window control (minimize, close, hide-to-tray, resize, toggle-always-on-top) and listens to `onNativeThemeChanged` for system theme updates.
+The main process manages the `BrowserWindow` (frameless, transparent, default 600×440, min 440×340), `Tray`, `Notification` (hourly chime with weather info, click-to-show), and `nativeTheme` monitoring. Weather data is sent from the renderer via IPC (`update-weather`) and stored in `latestWeather` for inclusion in chime notifications (`"🕐 现在是…整 | ☀️ 晴天 22°C"`). It exposes no Node.js APIs directly — the preload script uses `contextBridge.exposeInMainWorld('electronAPI', ...)` to inject a limited set of IPC methods. The renderer calls `window.electronAPI.*` for window control (minimize, close, hide-to-tray, resize, toggle-always-on-top) and listens to `onNativeThemeChanged` for system theme updates.
+
+**Do Not Disturb** (`dndEnabled` in main process): Toggled only via tray right-click menu checkbox. When enabled, `scheduleNextChime()` skips the `Notification.show()` call — the timer still runs but fires silently. There is no renderer-side DND state; it lives entirely in the main process.
+
+**Notification click-to-show**: All notifications (chime + tray-hide hint) attach a `click` event listener that calls `win.show()` + `win.focus()` to bring the hidden/minimized window to the foreground.
 
 ### Data flow (renderer)
 
@@ -93,6 +97,7 @@ fetchWeather (wttr.in → Open-Meteo fallback)  ──►  Weather
 - **useClock ref pattern**: `is24`, `offset`, and `tzOffset` are passed through refs inside the `tick()` closure, not through the effect dependency array. The `setInterval` effect has `[]` deps — changing these values does NOT recreate the timer.
 - **Weather Open-Meteo fallback has no humidity**: The Open-Meteo path sets `humidity: ''`. Always conditionally render humidity: `{data.humidity && <span>💧{data.humidity}</span>}`.
 - **Solar term only shows on exact day**: `isSolarTermDay()` returns `null` on non-term days. The DateDisplay renders nothing (`null`) when both `holiday` and `solarTerm` are falsy — avoid empty `<div>` elements that consume vertical space from `margin-top` + `line-height`.
-- **GitHub Release upload via Node.js https module**: No `gh` CLI available. Use `https.request` to call GitHub API (Create Release → DELETE old assets → Upload asset). Need classic PAT with `repo` scope.
+- **GitHub Release upload**: Use `gh release create vX.Y.Z <asset-path> --title ... --notes ...`. The `gh` CLI is authenticated as ReckerLiang98. If the fine-grained PAT is missing `releases` permission, fall back to Node.js `https.request` with a classic PAT.
 - **Lunar calendar bit offset MUST use `0x8000` as starting mask**: The 12 month sizes are stored in bits 4-15, with month 1 (正月) at bit 15. The bit-reading loops must start at `0x8000` (bit 15) and shift right, NOT `0x10000` (bit 16) — using the wrong mask shifts all month sizes by one position, causing all lunar dates to be systematically wrong. This bug was present in three places (`daysInLunarYear`, `solarToLunar` month loop, `getHoliday` 腊月 calculation) and was discovered by test cases comparing against known Chinese New Year dates.
+- **Do Not Disturb is tray-only**: The DND toggle only exists in the tray right-click menu (`updateTrayMenu()`). There is intentionally no renderer-side DND button, keyboard shortcut, or React state. Future instances should not add a UI control for it in the main window.
 - **Test infrastructure uses vitest + jsdom**: Test files in `src/tests/` with setup in `src/tests/setup.js`. The setup mocks `window.matchMedia` (not implemented by jsdom) and `window.electronAPI` (contextBridge). Vitest config in `vitest.config.js` uses `@vitejs/plugin-react` and `jsdom` environment. Do NOT use JSON.stringify to serialize hook return values in tests — functions (useCallback, setState) are lost. Use test helper components with data-testid attributes instead.
