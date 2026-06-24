@@ -11,7 +11,7 @@
 
 import { memo } from 'react';
 
-function TitleBar({ topEnabled, onMinimize, onToggleTop, onClose }) {
+function TitleBar({ topEnabled, onMinimize, onToggleTop, onSettings, onClose }) {
   return (
     <div className="title-bar">
       <span className="title-label">桌面时钟</span>
@@ -22,6 +22,14 @@ function TitleBar({ topEnabled, onMinimize, onToggleTop, onClose }) {
             <path d="M3 2h10v1.5H3z" fill="currentColor"/>
             <path d="M8 3.5l-4 6h8z" fill="none" stroke="currentColor" strokeWidth="1.2"/>
             <rect x="6" y="10" width="4" height="2" rx="0.5" fill="currentColor" opacity="0.5"/>
+          </svg>
+        </button>
+        {/* 设置按钮 */}
+        <button className="win-btn" onClick={onSettings} title="设置 (S)">
+          <svg width="14" height="14" viewBox="0 0 16 16">
+            <circle cx="8" cy="8" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.2"/>
+            <path d="M8 1v2.5M8 12.5V15M1 8h2.5M12.5 8H15M3.05 3.05l1.77 1.77M11.18 11.18l1.77 1.77M3.05 12.95l1.77-1.77M11.18 4.82l1.77-1.77"
+              stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
           </svg>
         </button>
         {/* 最小化按钮 */}

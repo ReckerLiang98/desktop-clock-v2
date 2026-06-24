@@ -310,6 +310,7 @@ export default function App() {
         topEnabled={topEnabled}
         onMinimize={handleMinimize}
         onToggleTop={toggleTop}
+        onSettings={openSettings}
         onClose={handleClose}
       />
 

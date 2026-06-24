@@ -10,7 +10,7 @@
 
 import { memo } from 'react';
 
-function Toolbar({ is24, showMs, themeMode, onToggle24, onToggleMs, onCycleTheme, onSync, onSettings }) {
+function Toolbar({ is24, showMs, themeMode, onToggle24, onToggleMs, onCycleTheme, onSync }) {
   const themeIcon = themeMode === 'dark'
     ? '🌙' : themeMode === 'light'
     ? '☀️' : '🔄';
@@ -44,11 +44,6 @@ function Toolbar({ is24, showMs, themeMode, onToggle24, onToggleMs, onCycleTheme
           <path d="M14 8a6 6 0 0 1-10.5 4" fill="none" stroke="currentColor" strokeWidth="1.2"/>
           <polyline points="3 14 3.5 12 1.5 11.5" fill="none" stroke="currentColor" strokeWidth="1.2"/>
         </svg>
-      </button>
-
-      {/* 设置 */}
-      <button className="btn settings-btn" onClick={onSettings} title="设置">
-        ⚙️
       </button>
     </div>
   );

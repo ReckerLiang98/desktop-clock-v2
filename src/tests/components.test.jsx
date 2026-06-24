@@ -147,7 +147,6 @@ describe('Toolbar', () => {
     onToggleMs: () => {},
     onCycleTheme: () => {},
     onSync: () => {},
-    onSettings: () => {},
   };
 
   it('24h 模式下 12h 按钮不高亮', () => {
@@ -204,11 +203,6 @@ describe('Toolbar', () => {
     const { container } = render(<Toolbar {...baseProps} />);
     const svg = container.querySelector('svg');
     expect(svg).toBeTruthy();
-  });
-
-  it('包含设置按钮（齿轮图标）', () => {
-    const { container } = render(<Toolbar {...baseProps} />);
-    expect(container.textContent).toContain('⚙️');
   });
 });
 
@@ -419,6 +413,7 @@ describe('TitleBar', () => {
     topEnabled: false,
     onMinimize: () => {},
     onToggleTop: () => {},
+    onSettings: () => {},
     onClose: () => {},
   };
 
@@ -427,10 +422,10 @@ describe('TitleBar', () => {
     expect(screen.getByText('桌面时钟')).toBeInTheDocument();
   });
 
-  it('渲染三个窗口控制按钮', () => {
+  it('渲染四个窗口控制按钮（置顶/设置/最小化/关闭）', () => {
     const { container } = render(<TitleBar {...baseProps} />);
     const btns = container.querySelectorAll('.win-btn');
-    expect(btns.length).toBe(3);
+    expect(btns.length).toBe(4);
   });
 
   it('置顶按钮在 topEnabled=true 时高亮', () => {
